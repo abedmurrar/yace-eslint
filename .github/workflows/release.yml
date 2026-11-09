@@ -1,0 +1,32 @@
+name: Release
+
+# Push a tag vX.Y.Z (matching `version` in yace-plugin.toml) to publish
+# dist/yace-eslint-X.Y.Z.tar.gz and its SHA-256 as a GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the manifest
+        run: |
+          v="$(sed -n 's/^version = "\(.*\)"/\1/p' yace-plugin.toml)"
+          [[ "v$v" == "$GITHUB_REF_NAME" ]] || { echo "tag $GITHUB_REF_NAME, manifest $v"; exit 1; }
+      - run: curl -fsSL https://abedmurrar.github.io/yace/install.sh | sudo sh
+      - run: scripts/package.sh
+      - run: yace --install-plugin dist/yace-eslint-*.tar.gz --yes
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum yace-eslint-*.tar.gz > SHA256SUMS
+          cp yace-eslint-*.tar.gz yace-eslint.tar.gz
+          gh release create "$GITHUB_REF_NAME" yace-eslint-*.tar.gz yace-eslint.tar.gz SHA256SUMS \
+            --title "YACE ESLint $GITHUB_REF_NAME" --notes "Install (YACE 0.13+): \`yace --install-plugin io.github.abedmurrar.yace-eslint\`, or Extensions: Browse Plugins… in YACE. Needs vscode-eslint-language-server (npm install --global vscode-langservers-extracted) and ESLint with a configuration in the project."

@@ -1,0 +1,45 @@
+id = "io.github.abedmurrar.yace-eslint"
+name = "ESLint"
+version = "0.1.0"
+description = "ESLint in YACE: lint problems and quick fixes for JavaScript and TypeScript, using your project's ESLint and configuration"
+publisher = "Abed Murrar"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/abedmurrar/yace-eslint"
+yace = ">=0.13"
+external_programs = ["vscode-eslint-language-server", "node"]
+
+# The ESLint server from VS Code's ESLint extension (vscode-langservers-extracted).
+# It loads the project's own ESLint, so it starts only where an ESLint
+# configuration file exists.
+[[lsp_servers]]
+name = "eslint"
+command = "vscode-eslint-language-server"
+args = ["--stdio"]
+local_bin = true
+languages = ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+root_files = [
+  "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs",
+  "eslint.config.ts", "eslint.config.mts", "eslint.config.cts",
+  ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", ".eslintrc.yaml", ".eslintrc.yml",
+]
+install_hint = "npm install --global vscode-langservers-extracted"
+
+# What VS Code's ESLint extension sends (the server asks for these).
+[lsp_servers.settings]
+validate = "on"
+run = "onType"
+quiet = false
+onIgnoredFiles = "off"
+format = false
+useESLintClass = false
+rulesCustomizations = []
+nodePath = ""
+options = {}
+# The server reads experimental.useFlatConfig and fails without this table.
+experimental = {}
+workingDirectory = { mode = "location" }
+problems = { shortenToSingleLine = false }
+codeActionOnSave = { enable = false, mode = "all" }
+# "Show documentation" needs an ESLint-specific request YACE does not handle.
+codeAction = { disableRuleComment = { enable = true, location = "separateLine" }, showDocumentation = { enable = false } }
+workspaceFolder = { uri = "${workspaceFolderUri}", name = "${workspaceFolderName}" }
